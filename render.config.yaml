@@ -1,0 +1,76 @@
+version: 1
+
+upstream:
+  mode: submodule
+  remote: "https://github.com/vendor/chart.git"
+  branch: "main"
+  path: "vendor-source/upstream-chart"
+  tracked_ref: "v1.2.3"
+
+render:
+  source_root: "vendor-source/upstream-chart"
+  target_root: "rendered/app-chart"
+  include:
+    - "Chart.yaml"
+    - "values.yaml"
+    - "templates/**"
+    - "*.md"
+  exclude:
+    - "templates/tests/**"
+    - ".github/**"
+
+modifications:
+  markers:
+    start: "# BEGIN custom-block: {id}"
+    end: "# END custom-block: {id}"
+
+  transforms:
+    # A) copy_file: copy custom helpers template
+    - id: "copy-custom-helpers"
+      type: "copy_file"
+      target_file: "templates/_customizations.tpl"
+      source_file: "mods/templates/_customizations.tpl"
+
+    # B) insert_after using source_file (external file)
+    - id: "deployment-initcontainers-include"
+      type: "insert_after"
+      target_file: "templates/deployment.yaml"
+      match:
+        text: "spec:"
+        occurrence: 2
+      source_file: "mods/templates/snippets/initcontainers.include.tpl"
+
+    # C) insert_after using yaml_value (inline in config)
+    - id: "deployment-app-extra-env-inline"
+      type: "insert_after"
+      target_file: "templates/deployment.yaml"
+      match:
+        text: 'value: "foo"'
+        occurrence: 1
+      yaml_value: |
+        {{- include "app.custom.extraEnvItems.app" . | nindent 12 }}
+
+    # D) insert_after using yaml_file (block file)
+    - id: "deployment-worker-extra-env-from-yaml-file"
+      type: "insert_after"
+      target_file: "templates/deployment.yaml"
+      match:
+        text: 'value: "bar"'
+        occurrence: 1
+      yaml_file: "mods/templates/snippets/worker-extra-env.include.tpl"
+
+    # E) replace_block using source_file
+    - id: "replace-app-env-block"
+      type: "replace_block"
+      target_file: "templates/deployment.yaml"
+      match:
+        start: "          env:"
+        end: "          ports:"
+        occurrence: 1
+      source_file: "mods/replace-blocks/app-env.block"
+
+    # F) delete_block using source_file (exact block)
+    - id: "delete-original-app-env"
+      type: "delete_block"
+      target_file: "templates/delete-test.yaml"
+      source_file: "mods/delete-blocks/deployment-app-original-env.block"

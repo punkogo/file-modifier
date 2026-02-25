@@ -1,0 +1,8 @@
+          env:
+            - name: APP_ENV
+              value: "foo"
+            - name: APP_MODE
+              value: "production"
+            - name: CUSTOM_INJECTED
+              value: "true"
+          ports:
