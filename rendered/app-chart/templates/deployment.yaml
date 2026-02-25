@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "upstream-chart.fullname" . }}
+  labels:
+    app: {{ include "upstream-chart.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "upstream-chart.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "upstream-chart.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+# BEGIN custom-block: deployment-initcontainers-include
+      initContainers:
+        - name: init-setup
+          image: busybox
+          command: ['sh', '-c', 'echo init done']
+# END custom-block: deployment-initcontainers-include
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: APP_ENV
+              value: "foo"
+            - name: APP_EXTRA
+              value: "replaced-value"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+# BEGIN custom-block: deployment-worker-extra-env-from-yaml-file
+        {{- include "app.custom.extraEnvItems.worker" . | nindent 12 }}
+# END custom-block: deployment-worker-extra-env-from-yaml-file
