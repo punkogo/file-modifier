@@ -161,7 +161,7 @@ The tool treats `vendor-source/` as **read-only**. All transforms operate on fil
 
 - You can safely `git submodule update` at any time.
 - Running `render_sync all` after an upstream update will re-apply all your `mods/` changes on top of the freshly copied upstream files.
-- You should **not** commit anything inside `rendered/` if you regenerate it in CI — treat it as a build artifact.
+- You should **not** commit anything inside `rendered/` if you regenerate it in CI — treat it as a build artifact. This repository keeps `rendered/app-chart/` in version control as a concrete, versioned reference example of the rendered output.
 
 ---
 

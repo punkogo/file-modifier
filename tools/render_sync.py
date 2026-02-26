@@ -406,6 +406,9 @@ def collect_files(source_root: Path, include_patterns: list[str], exclude_patter
             continue
         rel = p.relative_to(source_root)
         rel_str = rel.as_posix()
+        # Always skip VCS metadata directories regardless of include/exclude patterns
+        if any(part == ".git" for part in rel.parts):
+            continue
         if not include_spec.match_file(rel_str):
             continue
         if exclude_spec and exclude_spec.match_file(rel_str):
@@ -439,6 +442,16 @@ def do_render_copy(cfg: Config, base_dir: Path) -> None:
     if not files:
         typer.echo("[WARNING] No files matched include/exclude patterns.")
         return
+
+    # Safety: target_root must be a proper subdirectory of base_dir to prevent accidental deletion
+    resolved_target = target_root.resolve()
+    resolved_base = base_dir.resolve()
+    if resolved_target == resolved_base or not resolved_target.is_relative_to(resolved_base):
+        typer.echo(
+            f"[ERROR] target_root '{target_root}' must be a subdirectory of the project root '{base_dir}'",
+            err=True,
+        )
+        raise SystemExit(1)
 
     # Clear and recreate target
     if target_root.exists():
