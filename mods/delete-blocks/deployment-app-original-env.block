@@ -1,3 +1,2 @@
-          env:
             - name: WORKER_ENV
               value: "bar"

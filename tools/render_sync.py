@@ -269,7 +269,6 @@ def apply_replace_block(
     transform: TransformConfig,
     target_root: Path,
     base_dir: Path,
-    markers: MarkersConfig,
 ) -> None:
     target = target_root / transform.target_file
     if not target.exists():
@@ -402,6 +401,9 @@ def collect_files(source_root: Path, include_patterns: list[str], exclude_patter
     for p in source_root.rglob("*"):
         if not p.is_file():
             continue
+        # Skip VCS metadata regardless of include/exclude patterns
+        if ".git" in p.parts:
+            continue
         rel = p.relative_to(source_root)
         rel_str = rel.as_posix()
         if not include_spec.match_file(rel_str):
@@ -418,6 +420,19 @@ def do_render_copy(cfg: Config, base_dir: Path) -> None:
 
     if not source_root.exists():
         typer.echo(f"[ERROR] Source root not found: {source_root}", err=True)
+        raise SystemExit(1)
+
+    # Safety check: target_root must be strictly under base_dir to prevent
+    # accidental deletion of arbitrary directories on misconfiguration.
+    resolved_base = base_dir.resolve()
+    resolved_target = target_root.resolve()
+    try:
+        resolved_target.relative_to(resolved_base)
+    except ValueError:
+        typer.echo(f"[ERROR] target_root {cfg.render.target_root!r} must be under base_dir", err=True)
+        raise SystemExit(1)
+    if resolved_target == resolved_base:
+        typer.echo("[ERROR] target_root must not equal base_dir", err=True)
         raise SystemExit(1)
 
     files = collect_files(source_root, cfg.render.include, cfg.render.exclude)
@@ -451,7 +466,7 @@ def do_apply_mods(cfg: Config, base_dir: Path) -> None:
         elif transform.type == "insert_after":
             apply_insert_after(transform, target_root, base_dir, markers)
         elif transform.type == "replace_block":
-            apply_replace_block(transform, target_root, base_dir, markers)
+            apply_replace_block(transform, target_root, base_dir)
         elif transform.type == "delete_block":
             apply_delete_block(transform, target_root, base_dir)
 

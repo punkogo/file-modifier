@@ -199,7 +199,7 @@ class TestInsertAfter:
 
 
 class TestReplaceBlock:
-    def test_replaces_block(self, tmp_path, default_markers):
+    def test_replaces_block(self, tmp_path):
         target_root = tmp_path / "rendered"
         target_root.mkdir()
         f = target_root / "dep.yaml"
@@ -228,14 +228,14 @@ class TestReplaceBlock:
             },
             source_file="mods/env.block",
         )
-        apply_replace_block(t, target_root, tmp_path, default_markers)
+        apply_replace_block(t, target_root, tmp_path)
         content = f.read_text()
         assert "value: new" in content
         assert "value: old" not in content
         # end anchor still present
         assert "ports:" in content
 
-    def test_start_not_found_raises(self, tmp_path, default_markers):
+    def test_start_not_found_raises(self, tmp_path):
         target_root = tmp_path / "rendered"
         target_root.mkdir()
         (target_root / "dep.yaml").write_text("line1\nline2\n")
@@ -251,7 +251,7 @@ class TestReplaceBlock:
             source_file="mods/b.block",
         )
         with pytest.raises(SystemExit):
-            apply_replace_block(t, target_root, tmp_path, default_markers)
+            apply_replace_block(t, target_root, tmp_path)
 
 
 # ---------------------------------------------------------------------------
