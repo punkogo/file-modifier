@@ -165,17 +165,6 @@ The tool treats `vendor-source/` as **read-only**. All transforms operate on fil
 
 ---
 
-## PR #2 Review Comment Resolution
-
-The table below tracks every Copilot review comment on [PR #2](https://github.com/punkogo/file-modifier/pull/2) and records how each was resolved.
-
-For detailed review history and individual comment resolutions, see the pull requests on GitHub rather than this README.
-| 11 | [Broken transform sequence: delete-block F removes `env:` key, stranding the content inserted by transform D](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843043) | `render.config.yaml` | ✅ Yes | Removed the `env:` key from the delete block in `mods/delete-blocks/deployment-app-original-env.block` so transform F only deletes the `WORKER_ENV` list entry; fixed indentation to match the target file. |
-| 12 | [Unused imports in `tests/test_render_sync.py` (e.g. `textwrap`)](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843073) | `tests/test_render_sync.py` | ✅ Yes | Removed `textwrap` and any other unused symbols from the test module. All remaining imports (`MarkersConfig`, `TransformConfig`, `apply_copy_file`, `apply_delete_block`, `apply_insert_after`, `apply_replace_block`, `collect_files`) are actively used. `ruff check` passes cleanly. |
-| 13 | [`result` assigned from `runner.invoke(...)` but never used in `TestSourceCommands`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843104) | `tests/test_render_sync.py` | ✅ Yes | Captured the return value of both `runner.invoke(...)` calls as `result` and added `assert result.exit_code == 0` to both `test_source_init_calls_git_submodule_add` and `test_source_sync_calls_git_submodule_update`. |
-
----
-
 ## Developer Workflow
 
 ### Pre-commit hooks
