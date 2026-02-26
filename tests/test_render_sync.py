@@ -414,7 +414,8 @@ class TestSourceCommands:
             from typer.testing import CliRunner
 
             runner = CliRunner()
-            runner.invoke(app, ["source-init", "--config", str(config_path)])
+            result = runner.invoke(app, ["source-init", "--config", str(config_path)])
+            assert result.exit_code == 0
             # Two calls: git submodule add + git submodule update
             assert mock_run.call_count == 2
             first_call_args = mock_run.call_args_list[0][0][0]
@@ -444,7 +445,8 @@ class TestSourceCommands:
             from typer.testing import CliRunner
 
             runner = CliRunner()
-            runner.invoke(app, ["source-sync", "--config", str(config_path)])
+            result = runner.invoke(app, ["source-sync", "--config", str(config_path)])
+            assert result.exit_code == 0
             assert mock_run.call_count == 1
             call_args = mock_run.call_args_list[0][0][0]
             assert "submodule" in call_args

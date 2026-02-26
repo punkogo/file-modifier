@@ -165,6 +165,28 @@ The tool treats `vendor-source/` as **read-only**. All transforms operate on fil
 
 ---
 
+## PR #2 Review Comment Resolution
+
+The table below tracks every Copilot review comment on [PR #2](https://github.com/punkogo/file-modifier/pull/2) and records how each was resolved.
+
+| # | Comment (link) | File | Resolved? | How |
+|---|---|---|---|---|
+| 1 | [`copy_file` validator error message should include `yaml_value`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2854862369) | `tools/render_sync.py` | ✅ Yes | Error message updated to list `source_file`, `yaml_file`, *and* `yaml_value` as valid sources; both the "no source" and "multiple sources" messages were corrected. |
+| 2 | [Unused imports `sys`, `Any`, `Union`, `field_validator` in render_sync.py](https://github.com/punkogo/file-modifier/pull/2#discussion_r2854862405) | `tools/render_sync.py` | ✅ Yes | Removed all unused imports; only `Literal`, `Optional`, and `model_validator` are kept. `ruff check` now passes cleanly. |
+| 3 | [Makefile uses bare `python` instead of `python3`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2854862434) | `Makefile` | ✅ Yes | Added `PYTHON ?= python3` variable at the top; all targets now use `$(PYTHON)`. |
+| 4 | [`scripts/render.ps1` uses bare `python` instead of `python3`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2854862456) | `scripts/render.ps1` | ✅ Yes | Script updated to read `$env:PYTHON` with a fallback to `python3`. |
+| 5 | [`insert_after`/`replace_block` use `assert match is not None` instead of Pydantic validation](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857842948) | `tools/render_sync.py` | ✅ Yes | Added Pydantic `model_validator` checks: `insert_after` requires `match.text` or `match.regex`; `replace_block` and range `delete_block` require `match.start` and `match.end`. |
+| 6 | [README contradicts itself about whether `rendered/` should be in version control](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857842963) | `README.md` | ✅ Yes | Added a clarifying sentence: `rendered/app-chart/` is kept here as a versioned reference example; downstream consumers should treat it as a build artifact. |
+| 7 | [Makefile missing `lint` and `pre-commit` targets mentioned in PR description](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857842976) | `Makefile` | ✅ Yes | Added `lint` (`ruff check . && ruff format --check .`) and `pre-commit` (`pre-commit run --all-files`) targets; `.PHONY` list updated accordingly. |
+| 8 | [`do_render_copy` calls `shutil.rmtree(target_root)` unconditionally without safety checks](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857842991) | `tools/render_sync.py` | ✅ Yes | Added a guard that resolves both `target_root` and `base_dir`, requires the former to be strictly under the latter via `relative_to()`, and raises a `SystemExit(1)` with a clear error message otherwise. This PR also removed a duplicate redundant check (using `is_relative_to()`) that had been introduced below the `collect_files()` call, keeping a single, consistent safety block before the `shutil.rmtree` call. |
+| 9 | [`collect_files()` copies `.git` metadata from submodules into `rendered/`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843004) | `tools/render_sync.py` | ✅ Yes | Added a hard-skip for any path segment equal to `.git` regardless of include/exclude patterns. |
+| 10 | [`apply_replace_block()` has an unused `markers` parameter](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843018) | `tools/render_sync.py` | ✅ Yes | Removed the `markers` parameter from `apply_replace_block` and updated all call sites and tests. |
+| 11 | [Broken transform sequence: delete-block F removes `env:` key, stranding the content inserted by transform D](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843043) | `render.config.yaml` | ✅ Yes | Removed the `env:` key from the delete block in `mods/delete-blocks/deployment-app-original-env.block` so transform F only deletes the `WORKER_ENV` list entry; fixed indentation to match the target file. |
+| 12 | [Unused imports in `tests/test_render_sync.py` (e.g. `textwrap`)](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843073) | `tests/test_render_sync.py` | ✅ Yes | Removed `textwrap` and any other unused symbols from the test module. All remaining imports (`MarkersConfig`, `TransformConfig`, `apply_copy_file`, `apply_delete_block`, `apply_insert_after`, `apply_replace_block`, `collect_files`) are actively used. `ruff check` passes cleanly. |
+| 13 | [`result` assigned from `runner.invoke(...)` but never used in `TestSourceCommands`](https://github.com/punkogo/file-modifier/pull/2#discussion_r2857843104) | `tests/test_render_sync.py` | ✅ Yes | Captured the return value of both `runner.invoke(...)` calls as `result` and added `assert result.exit_code == 0` to both `test_source_init_calls_git_submodule_add` and `test_source_sync_calls_git_submodule_update`. |
+
+---
+
 ## Developer Workflow
 
 ### Pre-commit hooks
