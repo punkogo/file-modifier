@@ -28,18 +28,6 @@ from render_sync import (
 
 
 @pytest.fixture
-def tmp_env(tmp_path: Path):
-    """Create a minimal file structure for tests."""
-    source = tmp_path / "vendor-source" / "chart"
-    source.mkdir(parents=True)
-    target = tmp_path / "rendered" / "chart"
-    target.mkdir(parents=True)
-    mods = tmp_path / "mods"
-    mods.mkdir()
-    return tmp_path, source, target, mods
-
-
-@pytest.fixture
 def default_markers():
     return MarkersConfig()
 

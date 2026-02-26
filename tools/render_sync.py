@@ -352,7 +352,7 @@ def apply_delete_block(
         match = transform.match
         assert match is not None
         lines = file_text.splitlines(keepends=True)
-        occurrence = match.occurrence if match.occurrence else 1
+        occurrence = match.occurrence
         count = 0
         start_idx = None
         for i, line in enumerate(lines):
@@ -401,9 +401,6 @@ def collect_files(source_root: Path, include_patterns: list[str], exclude_patter
     for p in source_root.rglob("*"):
         if not p.is_file():
             continue
-        # Skip VCS metadata regardless of include/exclude patterns
-        if ".git" in p.parts:
-            continue
         rel = p.relative_to(source_root)
         rel_str = rel.as_posix()
         # Always skip VCS metadata directories regardless of include/exclude patterns
@@ -442,16 +439,6 @@ def do_render_copy(cfg: Config, base_dir: Path) -> None:
     if not files:
         typer.echo("[WARNING] No files matched include/exclude patterns.")
         return
-
-    # Safety: target_root must be a proper subdirectory of base_dir to prevent accidental deletion
-    resolved_target = target_root.resolve()
-    resolved_base = base_dir.resolve()
-    if resolved_target == resolved_base or not resolved_target.is_relative_to(resolved_base):
-        typer.echo(
-            f"[ERROR] target_root '{target_root}' must be a subdirectory of the project root '{base_dir}'",
-            err=True,
-        )
-        raise SystemExit(1)
 
     # Clear and recreate target
     if target_root.exists():
