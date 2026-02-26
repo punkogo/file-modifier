@@ -318,7 +318,7 @@ class TestDeleteBlock:
 
 class TestValidation:
     def test_multiple_sources_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="insert_after",
@@ -329,7 +329,7 @@ class TestValidation:
             )
 
     def test_no_source_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="insert_after",
@@ -338,7 +338,7 @@ class TestValidation:
             )
 
     def test_match_text_and_regex_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="insert_after",
@@ -348,7 +348,7 @@ class TestValidation:
             )
 
     def test_insert_after_without_match_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="insert_after",
@@ -357,7 +357,7 @@ class TestValidation:
             )
 
     def test_insert_after_match_without_text_or_regex_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="insert_after",
@@ -367,7 +367,7 @@ class TestValidation:
             )
 
     def test_replace_block_without_match_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="replace_block",
@@ -376,7 +376,7 @@ class TestValidation:
             )
 
     def test_replace_block_match_missing_end_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="replace_block",
@@ -386,7 +386,7 @@ class TestValidation:
             )
 
     def test_delete_block_multiple_sources_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             TransformConfig(
                 id="bad",
                 type="delete_block",
@@ -468,3 +468,40 @@ class TestSourceCommands:
             call_args = mock_run.call_args_list[0][0][0]
             assert "submodule" in call_args
             assert "update" in call_args
+
+
+# ---------------------------------------------------------------------------
+# help command (Cobra-style)
+# ---------------------------------------------------------------------------
+
+class TestHelpCommand:
+    def _runner(self):
+        from typer.testing import CliRunner
+        from render_sync import app
+        return CliRunner(), app
+
+    def test_help_no_args_prints_overall_help(self):
+        runner, app = self._runner()
+        result = runner.invoke(app, ["help"])
+        assert result.exit_code == 0
+        # Overall help should list known commands
+        assert "validate-config" in result.output
+        assert "render-copy" in result.output
+        assert "apply-mods" in result.output
+
+    def test_help_with_subcommand_prints_subcommand_help(self):
+        runner, app = self._runner()
+        result = runner.invoke(app, ["help", "validate-config"])
+        assert result.exit_code == 0
+        assert "validate" in result.output.lower()
+
+    def test_help_with_render_copy_subcommand(self):
+        runner, app = self._runner()
+        result = runner.invoke(app, ["help", "render-copy"])
+        assert result.exit_code == 0
+        assert "render-copy" in result.output or "copy" in result.output.lower()
+
+    def test_help_unknown_command_exits_nonzero(self):
+        runner, app = self._runner()
+        result = runner.invoke(app, ["help", "nonexistent-command"])
+        assert result.exit_code != 0

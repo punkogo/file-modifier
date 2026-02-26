@@ -1,9 +1,9 @@
-.PHONY: all render-copy apply-mods validate show-plan test install
+.PHONY: all render-copy apply-mods validate show-plan test install help
 
 PYTHON ?= python3
 
 install:
-	pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements.txt
 
 validate:
 	$(PYTHON) tools/render_sync.py validate-config
@@ -20,5 +20,8 @@ all:
 show-plan:
 	$(PYTHON) tools/render_sync.py show-plan
 
+help:
+	$(PYTHON) tools/render_sync.py help
+
 test:
-	pytest tests/ -v
+	$(PYTHON) -m pytest tests/ -v

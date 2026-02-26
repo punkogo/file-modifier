@@ -66,19 +66,19 @@ The result is a clean separation: upstream changes can be pulled in at any time,
 pip install -r requirements.txt
 
 # 2. (First time) Initialize the upstream submodule
-python tools/render_sync.py source-init
+python3 tools/render_sync.py source-init
 
 # 3. Run everything: validate → copy → apply mods
-python tools/render_sync.py all
+python3 tools/render_sync.py all
 # or via Make:
 make all
 
 # 4. After upstream updates
-python tools/render_sync.py source-sync   # pull latest upstream
-python tools/render_sync.py all           # re-render with your mods
+python3 tools/render_sync.py source-sync   # pull latest upstream
+python3 tools/render_sync.py all           # re-render with your mods
 
 # 5. Preview the plan without executing
-python tools/render_sync.py show-plan
+python3 tools/render_sync.py show-plan
 ```
 
 ---
@@ -91,6 +91,42 @@ python tools/render_sync.py show-plan
 | `insert_after` | Finds a matching line (by text or regex, with occurrence count) and inserts content after it, wrapped in idempotent markers. Running twice does not duplicate the block. |
 | `replace_block` | Replaces all lines between a `start` and `end` marker (inclusive of start, exclusive of end) with new content. |
 | `delete_block` | Removes an exact block of text from a file, or removes lines between `start`/`end` markers. |
+
+---
+
+## CLI Reference
+
+All commands accept `--help` / `-h` for inline help text. The `help` command mirrors Cobra's `help [command]` pattern:
+
+```bash
+# Overall help
+python3 tools/render_sync.py help
+python3 tools/render_sync.py --help
+
+# Help for a specific sub-command
+python3 tools/render_sync.py help validate-config
+python3 tools/render_sync.py help render-copy
+python3 tools/render_sync.py help apply-mods
+python3 tools/render_sync.py help all
+python3 tools/render_sync.py help show-plan
+python3 tools/render_sync.py help source-init
+python3 tools/render_sync.py help source-sync
+python3 tools/render_sync.py help source-status
+python3 tools/render_sync.py help init-skeleton
+```
+
+| Command | Purpose |
+|---|---|
+| `help [command]` | Show overall help or help for a specific sub-command (Cobra-style). |
+| `all` | validate-config → render-copy → apply-mods in sequence. |
+| `render-copy` | Copy matched files from `source_root` to `target_root`. |
+| `apply-mods` | Apply all transforms defined in `modifications.transforms`. |
+| `validate-config` | Schema-validate `render.config.yaml` without executing anything. |
+| `show-plan` | Print a human-readable summary of all configured transforms. |
+| `source-init` | Add and initialize the upstream git submodule. |
+| `source-sync` | Pull the latest upstream into the submodule. |
+| `source-status` | Show submodule path, remote, branch and current commit. |
+| `init-skeleton` | Scaffold `mods/`, `rendered/`, `tools/` dirs and an example config. |
 
 ---
 

@@ -717,5 +717,39 @@ modifications:
     typer.echo("[init-skeleton] Done.")
 
 
+@app.command("help")
+def help_cmd(
+    ctx: typer.Context,
+    command: Optional[str] = typer.Argument(None, help="Command to show help for."),
+) -> None:
+    """Show help for a command.
+
+    Without arguments prints overall help (same as --help).
+    With a command name prints that command's help, e.g.:
+
+        render_sync.py help validate-config
+    """
+    import click  # transitive dep of typer; imported here to keep module-level imports minimal
+
+    parent_ctx = ctx.parent
+    if command is None:
+        typer.echo(parent_ctx.get_help())
+        return
+
+    # Look up the named sub-command in the Click group
+    group = parent_ctx.command
+    sub_cmd = group.commands.get(command)  # type: ignore[attr-defined]
+    if sub_cmd is None:
+        typer.echo(
+            f"[ERROR] Unknown command: {command!r}\n"
+            f"Available commands: {', '.join(sorted(group.commands))}",  # type: ignore[attr-defined]
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    sub_ctx = click.Context(sub_cmd, parent=parent_ctx, info_name=command)
+    typer.echo(sub_ctx.get_help())
+
+
 if __name__ == "__main__":
     app()
