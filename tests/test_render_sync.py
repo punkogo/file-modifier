@@ -270,7 +270,7 @@ class TestDeleteBlock:
         assert "line1" in content
         assert "line2" in content
 
-    def test_block_not_found_warns(self, tmp_path, capsys):
+    def test_block_not_found_warns(self, tmp_path):
         target_root = tmp_path / "rendered"
         target_root.mkdir()
         f = target_root / "dep.yaml"

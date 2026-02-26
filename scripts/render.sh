@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Wrapper for render_sync.py — delegates all logic to Python CLI
 
-# Prefer python3, fall back to python, and fail if neither is available.
-if command -v python3 >/dev/null 2>&1; then
+# Honour PYTHON env override, then prefer python3, then fall back to python.
+if [ -n "$PYTHON" ]; then
+  : # Use the caller-supplied interpreter as-is
+elif command -v python3 >/dev/null 2>&1; then
   PYTHON=python3
 elif command -v python >/dev/null 2>&1; then
   if python -c "import sys; sys.exit(0 if sys.version_info[0] == 3 else 1)" >/dev/null 2>&1; then
