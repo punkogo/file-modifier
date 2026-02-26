@@ -22,4 +22,10 @@ if (-not $pythonCmd) {
         exit 1
     }
 }
+# Validate that the selected interpreter is Python 3.
+$majorVersion = & $pythonExe -c "import sys; print(sys.version_info[0])" 2>$null
+if ($LASTEXITCODE -ne 0 -or $majorVersion.Trim() -ne "3") {
+    Write-Error "The selected Python interpreter ('$pythonExe') is not Python 3. Please install Python 3 and ensure 'python3' or 'python' points to it, or set the PYTHON environment variable to a Python 3 executable."
+    exit 1
+}
 & $pythonExe "$scriptDir\..\tools\render_sync.py" @Args
