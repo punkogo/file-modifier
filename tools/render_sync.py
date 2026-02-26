@@ -11,14 +11,13 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional
 
 import pathspec
 import typer
 import yaml
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, model_validator
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -87,13 +86,38 @@ class TransformConfig(BaseModel):
         if self.type == "copy_file":
             if len(sources) == 0:
                 raise ValueError(
-                    f"Transform '{self.id}' (copy_file) requires source_file or yaml_file"
+                    f"Transform '{self.id}' (copy_file) requires exactly one content source "
+                    "(source_file, yaml_file, or yaml_value)"
                 )
             if len(sources) > 1:
                 raise ValueError(
-                    f"Transform '{self.id}' (copy_file) defines multiple sources"
+                    f"Transform '{self.id}' (copy_file) defines multiple content sources; "
+                    "use exactly one of source_file, yaml_file, or yaml_value"
+                )
+        if self.type == "insert_after":
+            if self.match is None:
+                raise ValueError(
+                    f"Transform '{self.id}' (insert_after) requires a 'match' configuration"
+                )
+            if self.match.text is None and self.match.regex is None:
+                raise ValueError(
+                    f"Transform '{self.id}' (insert_after) requires match.text or match.regex"
+                )
+        if self.type == "replace_block":
+            if self.match is None:
+                raise ValueError(
+                    f"Transform '{self.id}' (replace_block) requires a 'match' configuration"
+                )
+            if self.match.start is None or self.match.end is None:
+                raise ValueError(
+                    f"Transform '{self.id}' (replace_block) requires match.start and match.end"
                 )
         if self.type == "delete_block":
+            if len(sources) > 1:
+                raise ValueError(
+                    f"Transform '{self.id}' (delete_block) defines multiple content sources; "
+                    "use exactly one of source_file, yaml_file, or yaml_value"
+                )
             # delete_block can work with source_file/yaml_file/yaml_value OR match.start+end
             has_source = len(sources) > 0
             has_match_range = (

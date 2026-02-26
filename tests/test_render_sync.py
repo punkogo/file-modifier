@@ -347,6 +347,64 @@ class TestValidation:
                 yaml_value="content",
             )
 
+    def test_insert_after_without_match_raises(self):
+        with pytest.raises(Exception):
+            TransformConfig(
+                id="bad",
+                type="insert_after",
+                target_file="f.yaml",
+                yaml_value="content",
+            )
+
+    def test_insert_after_match_without_text_or_regex_raises(self):
+        with pytest.raises(Exception):
+            TransformConfig(
+                id="bad",
+                type="insert_after",
+                target_file="f.yaml",
+                match={"start": "begin", "end": "end"},
+                yaml_value="content",
+            )
+
+    def test_replace_block_without_match_raises(self):
+        with pytest.raises(Exception):
+            TransformConfig(
+                id="bad",
+                type="replace_block",
+                target_file="f.yaml",
+                source_file="mods/a.block",
+            )
+
+    def test_replace_block_match_missing_end_raises(self):
+        with pytest.raises(Exception):
+            TransformConfig(
+                id="bad",
+                type="replace_block",
+                target_file="f.yaml",
+                match={"start": "begin"},
+                source_file="mods/a.block",
+            )
+
+    def test_delete_block_multiple_sources_raises(self):
+        with pytest.raises(Exception):
+            TransformConfig(
+                id="bad",
+                type="delete_block",
+                target_file="f.yaml",
+                source_file="mods/a.block",
+                yaml_value="inline",
+            )
+
+    def test_copy_file_yaml_value_is_valid_source(self):
+        """yaml_value is a valid source for copy_file (same as source_file/yaml_file)."""
+        t = TransformConfig(
+            id="ok",
+            type="copy_file",
+            target_file="f.yaml",
+            yaml_value="content: here\n",
+        )
+        assert t.yaml_value == "content: here\n"
+
 
 # ---------------------------------------------------------------------------
 # source-init / source-sync subprocess mocks
