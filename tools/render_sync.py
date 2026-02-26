@@ -23,6 +23,7 @@ from pydantic import BaseModel, model_validator
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class UpstreamConfig(BaseModel):
     mode: str = "submodule"
     remote: str = ""
@@ -68,10 +69,7 @@ class TransformConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_sources(self) -> "TransformConfig":
-        sources = [
-            s for s in [self.source_file, self.yaml_file, self.yaml_value]
-            if s is not None
-        ]
+        sources = [s for s in [self.source_file, self.yaml_file, self.yaml_value] if s is not None]
         if self.type in ("insert_after", "replace_block"):
             if len(sources) == 0:
                 raise ValueError(
@@ -96,22 +94,14 @@ class TransformConfig(BaseModel):
                 )
         if self.type == "insert_after":
             if self.match is None:
-                raise ValueError(
-                    f"Transform '{self.id}' (insert_after) requires a 'match' configuration"
-                )
+                raise ValueError(f"Transform '{self.id}' (insert_after) requires a 'match' configuration")
             if self.match.text is None and self.match.regex is None:
-                raise ValueError(
-                    f"Transform '{self.id}' (insert_after) requires match.text or match.regex"
-                )
+                raise ValueError(f"Transform '{self.id}' (insert_after) requires match.text or match.regex")
         if self.type == "replace_block":
             if self.match is None:
-                raise ValueError(
-                    f"Transform '{self.id}' (replace_block) requires a 'match' configuration"
-                )
+                raise ValueError(f"Transform '{self.id}' (replace_block) requires a 'match' configuration")
             if self.match.start is None or self.match.end is None:
-                raise ValueError(
-                    f"Transform '{self.id}' (replace_block) requires match.start and match.end"
-                )
+                raise ValueError(f"Transform '{self.id}' (replace_block) requires match.start and match.end")
         if self.type == "delete_block":
             if len(sources) > 1:
                 raise ValueError(
@@ -120,15 +110,10 @@ class TransformConfig(BaseModel):
                 )
             # delete_block can work with source_file/yaml_file/yaml_value OR match.start+end
             has_source = len(sources) > 0
-            has_match_range = (
-                self.match is not None
-                and self.match.start is not None
-                and self.match.end is not None
-            )
+            has_match_range = self.match is not None and self.match.start is not None and self.match.end is not None
             if not has_source and not has_match_range:
                 raise ValueError(
-                    f"Transform '{self.id}' (delete_block) requires either a content source "
-                    "or match.start + match.end"
+                    f"Transform '{self.id}' (delete_block) requires either a content source or match.start + match.end"
                 )
         return self
 
@@ -169,6 +154,7 @@ def load_config(config_path: Path = CONFIG_FILE) -> Config:
 # Content resolver
 # ---------------------------------------------------------------------------
 
+
 def resolve_content(transform: TransformConfig, base_dir: Path) -> str:
     """Return the text content for a transform, from whichever source is defined."""
     if transform.yaml_value is not None:
@@ -185,6 +171,7 @@ def resolve_content(transform: TransformConfig, base_dir: Path) -> str:
 # ---------------------------------------------------------------------------
 # Marker helpers
 # ---------------------------------------------------------------------------
+
 
 def marker_start(markers: MarkersConfig, id_: str) -> str:
     return markers.start.replace("{id}", id_)
@@ -203,22 +190,17 @@ def wrap_with_markers(content: str, markers: MarkersConfig, id_: str) -> str:
 # Transform engine — text backend
 # ---------------------------------------------------------------------------
 
+
 def _find_occurrence(lines: list[str], pattern: str, is_regex: bool, occurrence: int) -> int:
     """Return index of the `occurrence`-th line matching `pattern`. Raises ValueError if not found."""
     found = 0
     for i, line in enumerate(lines):
-        matched = (
-            bool(re.search(pattern, line))
-            if is_regex
-            else pattern in line
-        )
+        matched = bool(re.search(pattern, line)) if is_regex else pattern in line
         if matched:
             found += 1
             if found == occurrence:
                 return i
-    raise ValueError(
-        f"Pattern {pattern!r} not found (occurrence {occurrence})"
-    )
+    raise ValueError(f"Pattern {pattern!r} not found (occurrence {occurrence})")
 
 
 def apply_copy_file(transform: TransformConfig, target_root: Path, base_dir: Path) -> None:
@@ -410,6 +392,7 @@ def apply_delete_block(
 # File copy with pathspec include/exclude
 # ---------------------------------------------------------------------------
 
+
 def collect_files(source_root: Path, include_patterns: list[str], exclude_patterns: list[str]) -> list[Path]:
     """Return relative paths of files to copy."""
     include_spec = pathspec.PathSpec.from_lines("gitwildmatch", include_patterns)
@@ -575,15 +558,17 @@ def source_init(
     if upstream.mode == "submodule":
         if not upstream.remote:
             typer.echo(
-                "[source-init] No remote configured. "
-                "For a local PoC, populate vendor-source/ manually.",
+                "[source-init] No remote configured. For a local PoC, populate vendor-source/ manually.",
                 err=True,
             )
             raise SystemExit(1)
         typer.echo(f"[source-init] Adding submodule: {upstream.remote} -> {upstream.path}")
         cmd = [
-            "git", "submodule", "add",
-            "-b", upstream.branch,
+            "git",
+            "submodule",
+            "add",
+            "-b",
+            upstream.branch,
             upstream.remote,
             upstream.path,
         ]
@@ -595,7 +580,9 @@ def source_init(
 
         result2 = subprocess.run(
             ["git", "submodule", "update", "--init", "--recursive"],
-            capture_output=True, text=True, cwd=str(base_dir),
+            capture_output=True,
+            text=True,
+            cwd=str(base_dir),
         )
         if result2.returncode != 0:
             typer.echo(f"[ERROR] git submodule update failed:\n{result2.stderr}", err=True)
@@ -621,7 +608,9 @@ def source_sync(
     typer.echo("[source-sync] Updating submodule...")
     result = subprocess.run(
         ["git", "submodule", "update", "--remote", "--merge"],
-        capture_output=True, text=True, cwd=str(base_dir),
+        capture_output=True,
+        text=True,
+        cwd=str(base_dir),
     )
     if result.returncode != 0:
         typer.echo(f"[ERROR] git submodule update failed:\n{result.stderr}", err=True)
@@ -655,7 +644,9 @@ def source_status(
     if upstream_path.exists():
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
-            capture_output=True, text=True, cwd=str(upstream_path),
+            capture_output=True,
+            text=True,
+            cwd=str(upstream_path),
         )
         if result.returncode == 0:
             typer.echo(f"  current commit: {result.stdout.strip()}")
@@ -741,8 +732,7 @@ def help_cmd(
     sub_cmd = group.commands.get(command)  # type: ignore[attr-defined]
     if sub_cmd is None:
         typer.echo(
-            f"[ERROR] Unknown command: {command!r}\n"
-            f"Available commands: {', '.join(sorted(group.commands))}",  # type: ignore[attr-defined]
+            f"[ERROR] Unknown command: {command!r}\nAvailable commands: {', '.join(sorted(group.commands))}",  # type: ignore[attr-defined]
             err=True,
         )
         raise typer.Exit(1)

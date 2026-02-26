@@ -1,4 +1,4 @@
-.PHONY: all render-copy apply-mods validate show-plan test install help
+.PHONY: all render-copy apply-mods validate show-plan test install help lint pre-commit
 
 PYTHON ?= python3
 
@@ -25,3 +25,10 @@ help:
 
 test:
 	$(PYTHON) -m pytest tests/ -v
+
+lint:
+	ruff check .
+	ruff format --check .
+
+pre-commit:
+	pre-commit run --all-files

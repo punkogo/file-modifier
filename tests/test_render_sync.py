@@ -1,37 +1,31 @@
 """Tests for render_sync.py"""
+
 from __future__ import annotations
 
-import textwrap
+# Ensure tools/ is importable
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
-# Ensure tools/ is importable
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
 
 from render_sync import (
-    Config,
     MarkersConfig,
-    ModificationsConfig,
-    RenderConfig,
     TransformConfig,
     apply_copy_file,
     apply_delete_block,
     apply_insert_after,
     apply_replace_block,
     collect_files,
-    load_config,
-    marker_end,
-    marker_start,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def tmp_env(tmp_path: Path):
@@ -59,6 +53,7 @@ def make_transform(**kwargs) -> TransformConfig:
 # ---------------------------------------------------------------------------
 # collect_files
 # ---------------------------------------------------------------------------
+
 
 class TestCollectFiles:
     def test_include_all(self, tmp_path):
@@ -91,6 +86,7 @@ class TestCollectFiles:
 # ---------------------------------------------------------------------------
 # copy_file
 # ---------------------------------------------------------------------------
+
 
 class TestCopyFile:
     def test_copies_from_source_file(self, tmp_path):
@@ -140,6 +136,7 @@ class TestCopyFile:
 # ---------------------------------------------------------------------------
 # insert_after
 # ---------------------------------------------------------------------------
+
 
 class TestInsertAfter:
     def test_inserts_block_with_markers(self, tmp_path, default_markers):
@@ -200,6 +197,7 @@ class TestInsertAfter:
 # replace_block
 # ---------------------------------------------------------------------------
 
+
 class TestReplaceBlock:
     def test_replaces_block(self, tmp_path, default_markers):
         target_root = tmp_path / "rendered"
@@ -217,17 +215,17 @@ class TestReplaceBlock:
         mods = tmp_path / "mods"
         mods.mkdir()
         block_file = mods / "env.block"
-        block_file.write_text(
-            "          env:\n"
-            "            - name: FOO\n"
-            "              value: new\n"
-        )
+        block_file.write_text("          env:\n            - name: FOO\n              value: new\n")
 
         t = make_transform(
             id="replace-env",
             type="replace_block",
             target_file="dep.yaml",
-            match={"start": "          env:", "end": "          ports:", "occurrence": 1},
+            match={
+                "start": "          env:",
+                "end": "          ports:",
+                "occurrence": 1,
+            },
             source_file="mods/env.block",
         )
         apply_replace_block(t, target_root, tmp_path, default_markers)
@@ -260,26 +258,17 @@ class TestReplaceBlock:
 # delete_block
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteBlock:
     def test_deletes_exact_block(self, tmp_path):
         target_root = tmp_path / "rendered"
         target_root.mkdir()
         f = target_root / "dep.yaml"
-        f.write_text(
-            "line1\n"
-            "          env:\n"
-            "            - name: WORKER\n"
-            "              value: bar\n"
-            "line2\n"
-        )
+        f.write_text("line1\n          env:\n            - name: WORKER\n              value: bar\nline2\n")
         mods = tmp_path / "mods"
         mods.mkdir()
         block = mods / "del.block"
-        block.write_text(
-            "          env:\n"
-            "            - name: WORKER\n"
-            "              value: bar\n"
-        )
+        block.write_text("          env:\n            - name: WORKER\n              value: bar\n")
 
         t = make_transform(
             id="del-env",
@@ -315,6 +304,7 @@ class TestDeleteBlock:
 # ---------------------------------------------------------------------------
 # Validation: multiple sources
 # ---------------------------------------------------------------------------
+
 
 class TestValidation:
     def test_multiple_sources_raises(self):
@@ -410,6 +400,7 @@ class TestValidation:
 # source-init / source-sync subprocess mocks
 # ---------------------------------------------------------------------------
 
+
 class TestSourceCommands:
     def test_source_init_calls_git_submodule_add(self, tmp_path):
         config_path = tmp_path / "render.config.yaml"
@@ -431,10 +422,11 @@ class TestSourceCommands:
 
         with patch("render_sync.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            from typer.testing import CliRunner
             from render_sync import app
+            from typer.testing import CliRunner
+
             runner = CliRunner()
-            result = runner.invoke(app, ["source-init", "--config", str(config_path)])
+            runner.invoke(app, ["source-init", "--config", str(config_path)])
             # Two calls: git submodule add + git submodule update
             assert mock_run.call_count == 2
             first_call_args = mock_run.call_args_list[0][0][0]
@@ -460,10 +452,11 @@ class TestSourceCommands:
 
         with patch("render_sync.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-            from typer.testing import CliRunner
             from render_sync import app
+            from typer.testing import CliRunner
+
             runner = CliRunner()
-            result = runner.invoke(app, ["source-sync", "--config", str(config_path)])
+            runner.invoke(app, ["source-sync", "--config", str(config_path)])
             assert mock_run.call_count == 1
             call_args = mock_run.call_args_list[0][0][0]
             assert "submodule" in call_args
@@ -474,10 +467,12 @@ class TestSourceCommands:
 # help command (Cobra-style)
 # ---------------------------------------------------------------------------
 
+
 class TestHelpCommand:
     def _runner(self):
-        from typer.testing import CliRunner
         from render_sync import app
+        from typer.testing import CliRunner
+
         return CliRunner(), app
 
     def test_help_no_args_prints_overall_help(self):

@@ -1,5 +1,8 @@
 # file-modifier — Declarative Upstream Customization Tool
 
+[![CI](https://github.com/punkogo/file-modifier/actions/workflows/ci.yml/badge.svg)](https://github.com/punkogo/file-modifier/actions/workflows/ci.yml)
+[![pre-commit](https://github.com/punkogo/file-modifier/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/punkogo/file-modifier/actions/workflows/pre-commit.yml)
+
 ## What Problem It Solves
 
 When you consume an upstream Helm chart (or any vendor file tree) as a git submodule or vendored copy, you want to apply local customizations **without forking or directly modifying the upstream source**. `render_sync` solves this by:
@@ -159,3 +162,51 @@ The tool treats `vendor-source/` as **read-only**. All transforms operate on fil
 - You can safely `git submodule update` at any time.
 - Running `render_sync all` after an upstream update will re-apply all your `mods/` changes on top of the freshly copied upstream files.
 - You should **not** commit anything inside `rendered/` if you regenerate it in CI — treat it as a build artifact.
+
+---
+
+## Developer Workflow
+
+### Pre-commit hooks
+
+[pre-commit](https://pre-commit.com/) runs on every `git commit` to enforce style and catch issues early.
+Hooks configured (`.pre-commit-config.yaml`):
+
+| Hook | What it checks |
+|---|---|
+| `trailing-whitespace` | Removes trailing whitespace |
+| `end-of-file-fixer` | Ensures files end with a newline |
+| `check-yaml` | Validates YAML syntax |
+| `check-added-large-files` | Blocks accidentally committed large files |
+| `check-merge-conflict` | Detects leftover merge-conflict markers |
+| `debug-statements` | Catches forgotten `pdb`/`breakpoint()` calls |
+| `ruff` | Python lint (auto-fix enabled) |
+| `ruff-format` | Python formatting (Black-compatible) |
+
+**Setup:**
+
+```bash
+pip install pre-commit
+pre-commit install          # installs the git hook
+pre-commit run --all-files  # run manually on every file
+# or via Make:
+make pre-commit
+```
+
+### Lint manually
+
+```bash
+make lint
+# expands to:
+ruff check .
+ruff format --check .
+```
+
+### CI / GitHub Actions
+
+Two workflows run automatically on every push and pull request:
+
+| Workflow | File | Purpose |
+|---|---|---|
+| **CI** | `.github/workflows/ci.yml` | Runs the pytest suite on Python 3.9, 3.11 and 3.12 |
+| **pre-commit** | `.github/workflows/pre-commit.yml` | Runs all pre-commit hooks to enforce code style |
