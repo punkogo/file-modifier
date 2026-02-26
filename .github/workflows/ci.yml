@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: ["main", "copilot/**"]
+  # push:
+  #   branches: ["main", "copilot/**"]
   pull_request:
     branches: ["main"]
 

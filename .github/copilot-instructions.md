@@ -7,8 +7,8 @@
 1. Copies a filtered subset of files from `vendor-source/` → `rendered/` (`render-copy`)
 2. Applies a declarative, ordered set of text transforms (`apply-mods`) defined in `render.config.yaml`
 
-Transform types: `copy_file`, `insert_after`, `replace_block`, `delete_block`.  
-Config schema is validated by Pydantic models inside `render_sync.py`.  
+Transform types: `copy_file`, `insert_after`, `replace_block`, `delete_block`.
+Config schema is validated by Pydantic models inside `render_sync.py`.
 The CLI is built with Typer; all configuration comes from `render.config.yaml`.
 
 ## Repository structure
